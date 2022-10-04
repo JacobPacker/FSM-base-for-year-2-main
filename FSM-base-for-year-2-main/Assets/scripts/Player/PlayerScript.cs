@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.VFX;
@@ -15,8 +16,9 @@ namespace Player
         Collision col;
         public SpriteHelper sh;
         public LayerMask platformLayerMask;
-        
-        bool onPlatform;
+
+        public bool onPlatform;
+
         public bool jumpFlag, jumpButtonPressed, jumpButtonReleased;
         public bool shootButtonPressed, shootButtonReleased;
         public bool crouchButtonPressed, crouchButtonReleased;
@@ -44,6 +46,7 @@ namespace Player
         // variables holding the different player states
         public StandingState standingState;
         public WalkingState walkingState;
+        public JumpingState jumpingState;
 
         public StateMachine sm;
 
@@ -68,6 +71,7 @@ namespace Player
             // add new states here
             standingState = new StandingState(this, sm);
             walkingState = new WalkingState(this, sm);
+            jumpingState = new JumpingState(this, sm);
 
             // initialise the statemachine with the default state
             sm.Init(standingState);
@@ -100,8 +104,6 @@ namespace Player
 
         }
 
-
-
         void FixedUpdate()
         {
             
@@ -114,6 +116,20 @@ namespace Player
             rb.velocity = new Vector2(xv, yv);
         }
 
+        public bool isGrounded()
+        {
+            Vector2 position = transform.position;
+            Vector2 direction = Vector2.down;
+            float distance = 1.0f;
+
+            RaycastHit2D hit = Physics2D.Raycast(position, direction, distance, platformLayerMask);
+            if (hit.collider != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         public void CheckForLand()
         {
@@ -147,7 +163,7 @@ namespace Player
 
         public void CheckForStand()
         {
-            //if (onPlatform == true)
+            if (onPlatform == true)
             {
 
                 if (Input.GetKey("left") == false) // key held down
@@ -164,7 +180,7 @@ namespace Player
             if (currentDir != lastDir)
             {
                 // player has changed direction
-                //sm.ChangeState(standingState);
+                sm.ChangeState(standingState);
             }
         }
 
@@ -180,9 +196,6 @@ namespace Player
             {
                 sm.ChangeState(walkingState);
             }
-
-
-        
         }
 
         public void SetMoveDirectionAndVelocity()
@@ -190,21 +203,48 @@ namespace Player
             if (Input.GetKey("left") == true)
             {
                 currentDir = Dir.Left;
-                xv = -2;
+                xv = -runSpeed;
+                gameObject.transform.localScale = new Vector3(-5, 5, 1);
             }
             else if (Input.GetKey("right") == true)
             {
                 currentDir = Dir.Right;
-                xv = 2;
+                xv = runSpeed;
+                gameObject.transform.localScale = new Vector3(5, 5, 1);
             }
             else
             {
                 xv = 0;
             }
-
-
         }
 
+        public void SetJumpState()
+        {
+            if (Input.GetKey("space") == true)
+            {
+                if (!onPlatform)
+                {
+                    return;
+                }
+                else
+                {
+                    sm.ChangeState(jumpingState);
+                    yv = initialJumpVel;
+                }
+            }
+        }
+
+        public void SetFallState()
+        {
+            if (!onPlatform)
+            {
+                yv -= fall * Time.deltaTime;
+            }
+            else
+            {
+                yv = 0;
+            }
+        }
 
         public void ReadInputKeys()
         {
@@ -223,6 +263,16 @@ namespace Player
             else
             {
                 rightButtonPressed = false;
+            }
+            if (Input.GetKey(KeyCode.Space))
+            {
+                jumpButtonPressed = true;
+                jumpButtonReleased = false;
+            }
+            else
+            {
+                jumpButtonPressed= false;
+                jumpButtonReleased= true;
             }
             if (Input.GetKey(KeyCode.DownArrow))
             {

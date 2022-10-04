@@ -31,6 +31,8 @@ namespace Player
             base.LogicUpdate();
 
             player.SetWalkState();
+            player.SetJumpState();
+
         }
 
         public override void PhysicsUpdate()

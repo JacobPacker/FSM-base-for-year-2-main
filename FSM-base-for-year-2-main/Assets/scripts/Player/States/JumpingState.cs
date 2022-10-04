@@ -1,15 +1,15 @@
-
 using UnityEngine;
 namespace Player
 {
-    public class WalkingState : State
+    public class JumpingState : State
     {
-        public WalkingState(PlayerScript player, StateMachine sm) : base(player, sm){ }
+        // constructor
+        public JumpingState(PlayerScript player, StateMachine sm) : base(player, sm) { }
 
         public override void Enter()
         {
             base.Enter();
-            player.anim.Play("arthur_run", 0, 0);
+            player.anim.Play("arthur_jump_up", 0, 0);
             player.xv = player.yv = 0;
         }
 
@@ -17,7 +17,7 @@ namespace Player
         {
             base.Exit();
 
-            player.anim.SetBool("run", false);
+            player.anim.SetBool("stand", false);
         }
 
         public override void HandleInput()
@@ -29,10 +29,10 @@ namespace Player
         {
             base.LogicUpdate();
 
-            player.SetMoveDirectionAndVelocity();
-
             player.CheckForStand();
 
+
+            player.SetWalkState();
         }
 
         public override void PhysicsUpdate()
