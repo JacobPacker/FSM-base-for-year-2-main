@@ -25,7 +25,7 @@ namespace Player
         public bool upButtonPressed, downButtonPressed;
         public bool leftButtonPressed, rightButtonPressed;
 
-        public float fall = 0.2f;
+        public float fall = 10f;
         public float jumpGravity = 0.6f;
         public float initialJumpVel = 10f;
         public float xv, yv;
@@ -47,6 +47,7 @@ namespace Player
         public StandingState standingState;
         public WalkingState walkingState;
         public JumpingState jumpingState;
+        public CrouchState crouchState;
 
         public StateMachine sm;
 
@@ -72,6 +73,7 @@ namespace Player
             standingState = new StandingState(this, sm);
             walkingState = new WalkingState(this, sm);
             jumpingState = new JumpingState(this, sm);
+            crouchState = new CrouchState(this, sm);
 
             // initialise the statemachine with the default state
             sm.Init(standingState);
@@ -101,7 +103,9 @@ namespace Player
 
             // Press R to reset the player's position
             DebugPlayer();
+            //isGrounded();
 
+          
         }
 
         void FixedUpdate()
@@ -116,20 +120,7 @@ namespace Player
             rb.velocity = new Vector2(xv, yv);
         }
 
-        public bool isGrounded()
-        {
-            Vector2 position = transform.position;
-            Vector2 direction = Vector2.down;
-            float distance = 1.0f;
-
-            RaycastHit2D hit = Physics2D.Raycast(position, direction, distance, platformLayerMask);
-            if (hit.collider != null)
-            {
-                return true;
-            }
-
-            return false;
-        }
+       
 
         public void CheckForLand()
         {
@@ -170,7 +161,10 @@ namespace Player
                 {
                     if (Input.GetKey("right") == false) // key held down
                     {
-                        sm.ChangeState(standingState);
+                        if (Input.GetKey("down") == false)
+                        {
+                            sm.ChangeState(standingState);
+                        }
                     }
                 }
 
@@ -180,21 +174,24 @@ namespace Player
             if (currentDir != lastDir)
             {
                 // player has changed direction
-                sm.ChangeState(standingState);
+                //sm.ChangeState(standingState);
             }
         }
 
 
         public void SetWalkState()
         {
-            if(Input.GetKey("left") == true )
+            if (onPlatform)
             {
-                sm.ChangeState(walkingState);
-            }
+                if (Input.GetKey("left") == true)
+                {
+                    sm.ChangeState(walkingState);
+                }
 
-            if (Input.GetKey("right") == true)
-            {
-                sm.ChangeState(walkingState);
+                if (Input.GetKey("right") == true)
+                {
+                    sm.ChangeState(walkingState);
+                }
             }
         }
 
@@ -229,20 +226,20 @@ namespace Player
                 else
                 {
                     sm.ChangeState(jumpingState);
-                    yv = initialJumpVel;
+                    yv = 10f;
+                    //yv = initialJumpVel;
                 }
             }
         }
 
-        public void SetFallState()
+        public void SetCrouchState()
         {
-            if (!onPlatform)
+            if (onPlatform)
             {
-                yv -= fall * Time.deltaTime;
-            }
-            else
-            {
-                yv = 0;
+                if (Input.GetKey(KeyCode.DownArrow))
+                {
+                    sm.ChangeState(crouchState);
+                }
             }
         }
 
@@ -323,6 +320,27 @@ namespace Player
             else
             {
                 downButtonPressed = false;
+            }
+
+        }
+
+        public void DoFall()
+        {
+            if (!onPlatform)
+            {
+                yv = -fall;
+            }
+            else
+            {
+                yv = 0;
+            }
+        }
+
+        public void DoJump()
+        {
+            if (yv > -5)
+            {
+                yv -= 0.6f; 
             }
 
         }

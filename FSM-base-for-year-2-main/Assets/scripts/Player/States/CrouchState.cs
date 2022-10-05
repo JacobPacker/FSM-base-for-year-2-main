@@ -1,23 +1,20 @@
-
 using UnityEngine;
 namespace Player
 {
-    public class WalkingState : State
+    public class CrouchState : State
     {
-        public WalkingState(PlayerScript player, StateMachine sm) : base(player, sm){ }
+        public CrouchState(PlayerScript player, StateMachine sm) : base(player, sm) { }
 
         public override void Enter()
         {
             base.Enter();
-            player.anim.Play("arthur_run", 0, 0);
-            //player.xv = player.yv = 0;
+            player.anim.Play("arthur_crouch", 0, 0);
+            player.xv = player.yv = 0;
         }
 
         public override void Exit()
         {
             base.Exit();
-
-            player.anim.SetBool("run", false);
         }
 
         public override void HandleInput()
@@ -29,8 +26,7 @@ namespace Player
         {
             base.LogicUpdate();
 
-            player.SetMoveDirectionAndVelocity();
-            player.SetCrouchState();
+            player.SetWalkState();
             player.CheckForStand();
             player.SetJumpState();
 

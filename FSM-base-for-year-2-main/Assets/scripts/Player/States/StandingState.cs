@@ -29,9 +29,11 @@ namespace Player
         public override void LogicUpdate()
         {
             base.LogicUpdate();
-
+            player.SetCrouchState();
             player.SetWalkState();
+            player.DoFall();
             player.SetJumpState();
+            
 
         }
 
